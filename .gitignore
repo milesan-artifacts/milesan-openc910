@@ -1,0 +1,7 @@
+*.elf
+*.o
+**/build*/
+**/generated*/
+**/smart_run
+**/tmp
+*.vcd

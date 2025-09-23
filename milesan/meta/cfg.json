@@ -1,0 +1,18 @@
+{
+    "misaligned_data_supported": true,
+    "privlvs": "msu",
+    "mmu": "sv39",
+    "marchflags": "-march=rv64imc -mabi=lp64",
+    "bootaddr": "0x0000000",
+    "stopsigaddr": "0x8",
+    "regdumpaddr": "0x10",
+    "fpregdumpaddr": "0x18",
+    "regstreamaddr": "0x20",
+    "bootrom_elf": "",
+    "lead_cycles": 512,
+    "toplevel": "openc910_tiny_soc",
+    "trace_top": "openc910_tiny_soc.i_mem_top",
+    "verilatorprefix": "openc910",
+    "memorywordsize": 64,
+    "clsize": 64
+}
