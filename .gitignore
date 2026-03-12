@@ -5,3 +5,4 @@
 **/smart_run
 **/tmp
 *.vcd
+*.core
