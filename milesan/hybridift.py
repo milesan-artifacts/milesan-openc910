@@ -39,7 +39,7 @@ LATENCY_OFFSET = 9 # Must be changed if the input sequence is different.
 DO_TRACE = True
 NUM_PROCESSES_FOR_BUILD = 32
 TAINT_META_RESET_PORT_NAME_PREFIX = "taint_meta_reset"
-CELLIFT_NOINSTRUMENT_ATTR = "cellift_noinstrument"
+MILESAN_NOINSTRUMENT_ATTR = "cellift_noinstrument"
 
 def __signal_to_taint_signal_name(signal_name: str):
     return f"{signal_name}_t0"
@@ -376,8 +376,8 @@ def __analyze_sram_roles_and_latency(module_name: str, module_content_post_yosys
         else:
             template_output_signal = f"{output_data_signal_and_width[0]}"
 
-        PATH_TO_HYBRIDIFT_DV = os.getenv("CELLIFT_PYTHON_COMMON")
-        assert PATH_TO_HYBRIDIFT_DV is not None, "The environment variable CELLIFT_PYTHON_COMMON should be set to the path of the hybriDIFT-DV repository"
+        PATH_TO_HYBRIDIFT_DV = os.getenv("MILESAN_PYTHON_COMMON")
+        assert PATH_TO_HYBRIDIFT_DV is not None, "The environment variable MILESAN_PYTHON_COMMON should be set to the path of the hybriDIFT-DV repository"
 
         # Header file
         with open(os.path.join(PATH_TO_HYBRIDIFT_DV, "..", "hybridift_dv", "testbench_template.h"), "r") as f:
@@ -1128,7 +1128,7 @@ def instrument_sram(module_name: str, module_lines: list, module_annotations: li
     clock_signal = clock_signals.pop()
 
     # Add the attribute to the module declaration
-    module_lines = [f"(* {CELLIFT_NOINSTRUMENT_ATTR} *)"] + module_lines
+    module_lines = [f"(* {MILESAN_NOINSTRUMENT_ATTR} *)"] + module_lines
 
     # Remove all empty lines
     module_lines = [line for line in module_lines if line.strip().replace('\n', '') != ""]

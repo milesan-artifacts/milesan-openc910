@@ -47,64 +47,56 @@ generated/sv2v_axi_to_mem.v: | generated/out
 generated/openc910_pickled.sv: generated/sv2v_out.v | generated/out
 	cp $< $@
 
-generated/cellift_precompact.sv: $(CELLIFT_YS)/instrument.ys.tcl generated/sv2v_out.v | generated/out logs generated/timestamps
+generated/cellift_precompact.sv: $(MILESAN_YS)/instrument.ys.tcl generated/sv2v_out.v | generated/out logs generated/timestamps
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_cellift_precompact_start.txt
-	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=$(TOP_FOR_INSTRUMENTATION) $(CELLIFT_META_ROOT)/resourcewrapper $(RESOURCEWRAPPER_TAG) cellift instr yosys -c $< -l $@.log
+	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=$(TOP_FOR_INSTRUMENTATION) yosys -c $< -l $@.log
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_cellift_precompact_end.txt
 
-# generated/hybridift_precompact.sv: $(CELLIFT_YS)/instrument.ys.tcl generated/sv2v_out_blackboxsrams.v | generated/out logs generated/timestamps
-# 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_hybridift_precompact_start.txt
-# 	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=$(TOP_FOR_INSTRUMENTATION) $(CELLIFT_META_ROOT)/resourcewrapper $(RESOURCEWRAPPER_TAG) cellift instr yosys -c $< -l $@.log
-# 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_hybridift_precompact_end.txt
 
-
-generated/hybridift_precompact.sv: $(CELLIFT_YS)/instrument.ys.tcl generated/hybridift_interm.sv | generated/out logs generated/timestamps
+generated/hybridift_precompact.sv: $(MILESAN_YS)/instrument.ys.tcl generated/hybridift_interm.sv | generated/out logs generated/timestamps
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_hybridift_precompact_start.txt
-	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=$(TOP_FOR_INSTRUMENTATION) $(CELLIFT_META_ROOT)/resourcewrapper $(RESOURCEWRAPPER_TAG) cellift instr yosys -c $< -l $@.log
+	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=$(TOP_FOR_INSTRUMENTATION) yosys -c $< -l $@.log
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_hybridift_precompact_end.txt
 
-# generated/drfuzz_mem_precompact.sv: $(CELLIFT_YS)/instrument.ys.tcl generated/sv2v_out_blackboxsrams.v | generated/out logs generated/timestamps
-# 	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=$(TOP_FOR_INSTRUMENTATION) $(CELLIFT_META_ROOT)/resourcewrapper $(RESOURCEWRAPPER_TAG) cellift instr yosys -c $< -l $@.log
-
-generated/drfuzz_mem_precompact.sv: $(CELLIFT_YS)/instrument.ys.tcl  generated/hybridift_interm_no_unwanted_t0s.sv | generated/out logs generated/timestamps
-	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=$(TOP_FOR_INSTRUMENTATION) $(CELLIFT_META_ROOT)/resourcewrapper $(RESOURCEWRAPPER_TAG) cellift instr yosys -c $< -l $@.log
+generated/drfuzz_mem_precompact.sv: $(MILESAN_YS)/instrument.ys.tcl  generated/hybridift_interm_no_unwanted_t0s.sv | generated/out logs generated/timestamps
+	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=$(TOP_FOR_INSTRUMENTATION) yosys -c $< -l $@.log
 
 
 # TODO: use recipe, right now I created it manually since we need to instrument from the top to the memory but replace the memory with the IFT sram.
 # src/util/ift_axi_to_mem.sv is therefore obtained by manually replacing the sram in generated/ift_axi_to_mem.sv 
-generated/ift_axi_to_mem.sv: $(CELLIFT_YS)/instrument.ys.tcl generated/sv2v_axi_to_mem.v | generated/out logs generated/timestamps
-	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=milesan_axi_slave128 $(CELLIFT_META_ROOT)/resourcewrapper $(RESOURCEWRAPPER_TAG) cellift instr yosys -c $< -l $@.log
+generated/ift_axi_to_mem.sv: $(MILESAN_YS)/instrument.ys.tcl generated/sv2v_axi_to_mem.v | generated/out logs generated/timestamps
+	DECOMPOSE_MEMORY=1 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=cellift VERILOG_OUTPUT=$@ TOP_MODULE=milesan_axi_slave128 yosys -c $< -l $@.log
 
 generated/out/cellift.sv: generated/cellift_precompact.sv | generated/timestamps
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_out_cellift_start.txt
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/expand_left_operand.py $< generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/expand_right_operand.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/compress_concats.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/divide_concat_into_subconcats.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/correct_too_wide_lvalues.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/expand_left_operand.py $< generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/expand_right_operand.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/compress_concats.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/divide_concat_into_subconcats.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/correct_too_wide_lvalues.py generated/interm.sv generated/interm.sv
 	sed 's/assign xx_intc_vld/\/\/assign xx_intc_vld/g' generated/interm.sv > $@
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_out_cellift_end.txt
 
 generated/out/hybridift.sv: generated/hybridift_precompact.sv | generated/timestamps
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_out_hybridift_start.txt
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/expand_left_operand.py $< generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/expand_right_operand.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/compress_concats.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/divide_concat_into_subconcats.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/correct_too_wide_lvalues.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/remove_clkt0.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/expand_left_operand.py $< generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/expand_right_operand.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/compress_concats.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/divide_concat_into_subconcats.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/correct_too_wide_lvalues.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/remove_clkt0.py generated/interm.sv generated/interm.sv
 	sed 's/assign xx_intc_vld/\/\/assign xx_intc_vld/g' generated/interm.sv > $@
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_out_hybridift_end.txt
 
 
 generated/out/drfuzz_mem.sv: generated/drfuzz_mem_precompact.sv | generated/timestamps
 	sed 's/\$func\$\/cellift-cva6\/cellift\/generated\/hybridift_interm.sv/mypath/g' $< > generated/interm.sv 
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/expand_left_operand.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/expand_right_operand.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/compress_concats.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/divide_concat_into_subconcats.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/correct_too_wide_lvalues.py generated/interm.sv generated/interm.sv
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/remove_clkt0.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/expand_left_operand.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/expand_right_operand.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/compress_concats.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/divide_concat_into_subconcats.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/correct_too_wide_lvalues.py generated/interm.sv generated/interm.sv
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/remove_clkt0.py generated/interm.sv generated/interm.sv
 	sed 's/assign xx_intc_vld/\/\/assign xx_intc_vld/g' generated/interm.sv > $@
 
 
@@ -125,10 +117,10 @@ generated/sv2v_out_with_sram_mem_blackbox.v: generated/sv2v_out.v src/util/sram_
 
 # openc910_SMALLER_CACHES = -Dopenc910_SMALLER_CACHES
 
-# $(PYTHON) $(CELLIFT_PYTHON_COMMON)/ascend_package_in_pickle.py cva6_config_pkg generated/pickled_interm.sv
-# $(PYTHON) $(CELLIFT_PYTHON_COMMON)/remove_pragma_translate_off.py generated/pickled_interm.sv generated/pickled_interm.sv
-# $(PYTHON) $(CELLIFT_PYTHON_COMMON)/remove_attributes.py generated/pickled_interm.sv generated/pickled_interm.sv
-# $(PYTHON) $(CELLIFT_PYTHON_COMMON)/remove_modules.py generated/pickled_interm.sv $@ pad_functional_pd pad_functional_pu axi_lite_to_apb axi_lite_to_apb_intf axi_lite_xbar axi_lite_to_axi axi_modify_address axi_to_axi_lite axi_to_axi_lite_intf axi_to_axi_lite_id_reflect
+# $(PYTHON) $(MILESAN_PYTHON_COMMON)/ascend_package_in_pickle.py cva6_config_pkg generated/pickled_interm.sv
+# $(PYTHON) $(MILESAN_PYTHON_COMMON)/remove_pragma_translate_off.py generated/pickled_interm.sv generated/pickled_interm.sv
+# $(PYTHON) $(MILESAN_PYTHON_COMMON)/remove_attributes.py generated/pickled_interm.sv generated/pickled_interm.sv
+# $(PYTHON) $(MILESAN_PYTHON_COMMON)/remove_modules.py generated/pickled_interm.sv $@ pad_functional_pd pad_functional_pu axi_lite_to_apb axi_lite_to_apb_intf axi_lite_xbar axi_lite_to_axi axi_modify_address axi_to_axi_lite axi_to_axi_lite_intf axi_to_axi_lite_id_reflect
 # rm -rf generated/pickled_interm.sv
 
 #
@@ -143,17 +135,17 @@ generated/sv2v_out_with_sram_mem_blackbox.v: generated/sv2v_out.v src/util/sram_
 
 generated/out/vanilla.sv: generated/openc910_pickled.sv | generated/out generated/timestamps
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_out_vanilla_start.txt
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/remove_modules.py $< generated/interm.sv openc910_testharness cva6_mmu_sv32 pad_functional_pd pad_functional_pu
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/compress_concats.py generated/interm.sv $@
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/remove_modules.py $< generated/interm.sv openc910_testharness cva6_mmu_sv32 pad_functional_pd pad_functional_pu
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/compress_concats.py generated/interm.sv $@
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_out_vanilla_end.txt
 
-generated/passthrough_precompact.sv: $(CELLIFT_YS)/passthrough_metareset.ys.tcl generated/sv2v_out_with_sram_mem_blackbox.v | generated/out logs generated/timestamps
+generated/passthrough_precompact.sv: $(MILESAN_YS)/passthrough_metareset.ys.tcl generated/sv2v_out_with_sram_mem_blackbox.v | generated/out logs generated/timestamps
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_passthrough_start.txt
 	DECOMPOSE_MEMORY=0 VERILOG_INPUT=$(word 2,$^) INSTRUMENTATION=vanilla VERILOG_OUTPUT=$@ TOP_MODULE=$(TOP_MODULE) yosys -DRANDOMIZE_MEM_INIT -DRANDOMIZE_REG_INIT -c $< -l $@.log
 	date +%Y-%m-%dT%H:%M:%S > generated/timestamps/generated_passthrough_end.txt
 
 generated/passthrough_precompact_smaller.sv: generated/passthrough_precompact.sv | generated
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/remove_unused_modules.py $< $@ openc910_mem_top
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/remove_unused_modules.py $< $@ openc910_mem_top
 
 generated/hybridift_interm.sv: generated/passthrough_precompact_smaller.sv | generated
 	$(PYTHON) hybridift.py $< $@
@@ -174,7 +166,7 @@ generated/hybridift_interm_no_unwanted_t0s.sv: generated/hybridift_interm.sv
 # # Core files
 # CORE_FILES_NOTRACE=$(patsubst %,run_%_notrace.core, $(TARGET_NAMES))
 # $(CORE_FILES_NOTRACE): run_%.core: run_%.core.template
-# 	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/gen_corefiles.py $< $@
+# 	$(PYTHON) $(MILESAN_PYTHON_COMMON)/gen_corefiles.py $< $@
 
 # #
 # # Recompile, if only the software has changed since the previous step.
@@ -193,7 +185,7 @@ generated/hybridift_interm_no_unwanted_t0s.sv: generated/hybridift_interm.sv
 # 	rm -rf $</src/run_$*_0.1/dv
 # 	rm -rf ./build/dv
 # 	cp -r dv $</src/run_$*_0.1
-# 	cp -r $(CELLIFT_DESIGN_PROCESSING_ROOT)/common/dv ./build
+# 	cp -r $(MILESAN_DESIGN_PROCESSING_ROOT)/common/dv ./build
 # 	make -C $</default-verilator -j $(MILESAN_JOBS)
 
 #
@@ -330,7 +322,7 @@ recompile_cellift_notrace: # generated/out/cellift.sv
 	rm -rf build/run_cellift_notrace_0.1/default-verilator/src/run_cellift_0.1/dv
 	rm -rf ./build/dv
 	cp -r dv build/run_cellift_notrace_0.1//default-verilator/src/run_cellift_0.1
-	cp -r $(CELLIFT_DESIGN_PROCESSING_ROOT)/common/dv ./build
+	cp -r $(MILESAN_DESIGN_PROCESSING_ROOT)/common/dv ./build
 	make -C build/run_cellift_notrace_0.1/default-verilator -j $(MILESAN_JOBS)
 
 .PHONY: recompile_hybridift_notrace
@@ -340,7 +332,7 @@ recompile_hybridift_notrace: # generated/out/hybridift.sv
 	rm -rf build/run_hybridift_notrace_0.1//default-verilator/src/run_hybridift_0.1/dv
 	rm -rf ./build/dv
 	cp -r dv build/run_hybridift_notrace_0.1/default-verilator/src/run_hybridift_0.1
-	cp -r $(CELLIFT_DESIGN_PROCESSING_ROOT)/common/dv ./build
+	cp -r $(MILESAN_DESIGN_PROCESSING_ROOT)/common/dv ./build
 	make -C build/run_hybridift_notrace_0.1/default-verilator -j $(MILESAN_JOBS)
 
 .PHONY: recompile_drfuzz_mem_notrace
@@ -359,17 +351,17 @@ tmp generated/timestamps:
 durations_cellift:
 	@echo "For cellift:"
 	@echo "Build"
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/compute_duration.py generated/timestamps/generated_cellift_precompact_start.txt generated/timestamps/generated_cellift_precompact_end.txt
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/compute_duration.py generated/timestamps/generated_cellift_precompact_start.txt generated/timestamps/generated_cellift_precompact_end.txt
 	@echo "Verilator elaboration"
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/compute_duration.py generated/timestamps/run_cellift_notrace_start.txt generated/timestamps/run_cellift_notrace_end.txt
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/compute_duration.py generated/timestamps/run_cellift_notrace_start.txt generated/timestamps/run_cellift_notrace_end.txt
 
 .PHONY: durations_hybridift
 durations_hybridift:
 	@echo "For hybridift:"
 	@echo "Build"
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/compute_duration.py generated/timestamps/generated_hybridift_precompact_start.txt generated/timestamps/generated_hybridift_precompact_end.txt
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/compute_duration.py generated/timestamps/generated_hybridift_precompact_start.txt generated/timestamps/generated_hybridift_precompact_end.txt
 	@echo "Verilator elaboration"
-	$(PYTHON) $(CELLIFT_PYTHON_COMMON)/compute_duration.py generated/timestamps/run_hybridift_notrace_start.txt generated/timestamps/run_hybridift_notrace_end.txt
+	$(PYTHON) $(MILESAN_PYTHON_COMMON)/compute_duration.py generated/timestamps/run_hybridift_notrace_start.txt generated/timestamps/run_hybridift_notrace_end.txt
 
 
 #
